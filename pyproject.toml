@@ -20,5 +20,8 @@ Repository = "https://github.com/rmisegal/L8-CorollationVsConvulation"
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.uv]
+python = ">=3.8"
+
 [dependency-groups]
 dev = []

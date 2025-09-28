@@ -62,14 +62,20 @@ cd L8-CorollationVsConvulation
 
 #### Step 3: Set Up Virtual Environment and Install Dependencies
 ```powershell
-# Create virtual environment and install dependencies
+# Create virtual environment with Python 3.8+ (UV will auto-detect)
 uv venv
+
+# Or specify Python version explicitly:
+# uv venv --python 3.11
 
 # Activate virtual environment (Windows)
 .venv\Scripts\Activate.ps1
 
 # Install project dependencies
 uv pip install -r requirements.txt
+
+# Verify Python version in venv
+python --version
 ```
 
 #### Step 4: Run the Visualization
@@ -160,6 +166,22 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```powershell
 # Restart PowerShell after UV installation, or add to PATH manually:
 $env:PATH += ";$env:USERPROFILE\.cargo\bin"
+```
+
+#### UV Python Version Issues
+```powershell
+# Check available Python versions
+uv python list
+
+# Install specific Python version with UV (if needed)
+uv python install 3.11
+
+# Create venv with specific Python version
+uv venv --python 3.11
+
+# Verify the Python version in your venv
+.venv\Scripts\Activate.ps1
+python --version
 ```
 
 #### Virtual Environment Activation Issues
