@@ -38,9 +38,13 @@ An educational Python program that demonstrates the mathematical process of 1D c
 # If you see UV deprecation warnings, update your project:
 git pull origin main
 # Then recreate your virtual environment:
-Remove-Item -Recurse -Force .venv
+Remove-Item -Recurse -Force .venv  # Windows
+# rm -rf .venv  # Linux/macOS
 uv venv
+# Windows PowerShell:
 .venv\Scripts\Activate.ps1
+# Linux/macOS:
+# source .venv/bin/activate
 uv pip install -r requirements.txt
 ```
 
@@ -91,8 +95,14 @@ uv venv
 # Or specify Python version explicitly:
 # uv venv --python 3.11
 
-# Activate virtual environment (Windows)
+# Activate virtual environment
+# Windows PowerShell:
 .venv\Scripts\Activate.ps1
+# If Scripts folder doesn't exist, try:
+# .venv\bin\activate.ps1
+
+# Linux/macOS:
+# source .venv/bin/activate
 
 # Install project dependencies
 uv pip install -r requirements.txt
@@ -100,6 +110,8 @@ uv pip install -r requirements.txt
 # Verify Python version in venv
 python --version
 ```
+
+> **Note**: UV creates different folder structures on different platforms. On Windows, it usually creates `Scripts\`, but sometimes creates `bin\`. Try both paths if one doesn't work.
 
 #### Step 4: Run the Visualization
 ```powershell
@@ -112,14 +124,17 @@ python enhanced_convolution_visualization.py
 If you prefer using standard pip:
 ```powershell
 # Clone repository
-git clone https://github.com/rmisegal/L8-CorollationVsConvulation.git
-cd L8-CorollationVsConvulation
+git clone https://github.com/rmisegal/L8-CorollationVsConvolution.git
+cd L8-CorollationVsConvolution
 
 # Create virtual environment
 python -m venv venv
 
 # Activate virtual environment
+# Windows PowerShell:
 venv\Scripts\Activate.ps1
+# Linux/macOS:
+# source venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
@@ -211,9 +226,12 @@ python --version
 
 #### Virtual Environment Activation Issues
 ```powershell
-# If activation fails, try:
+# Windows PowerShell - If activation fails, try:
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
 .venv\Scripts\Activate.ps1
+
+# Linux/macOS - If activation fails, try:
+# source .venv/bin/activate
 ```
 
 #### Display Issues
