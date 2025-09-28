@@ -32,9 +32,15 @@ An educational Python program that demonstrates the mathematical process of 1D c
 ## 🚀 Quick Start
 
 ### Prerequisites
+- **Python 3.8 or higher** (3.9-3.12 recommended)
 - Windows 10/11
 - PowerShell 5.1 or PowerShell Core 7+
-- Python 3.8 or higher
+
+#### Check Your Python Version:
+```powershell
+python --version
+# Should show Python 3.8.x or higher
+```
 
 ### Installation with UV (Recommended)
 
