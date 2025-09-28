@@ -5,8 +5,10 @@
 An educational Python program that demonstrates the mathematical process of 1D convolution step-by-step, showing how a kernel slides over an input signal and computes the convolution result interactively.
 
 ![Python](https://img.shields.io/badge/python-v3.8+-blue.svg)
+![UV](https://img.shields.io/badge/uv-supported-green.svg)
 ![Dependencies](https://img.shields.io/badge/dependencies-numpy%2C%20matplotlib-green.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Version](https://img.shields.io/badge/version-1.0.0-brightgreen.svg)
 
 ## 🎯 Features
 
@@ -28,6 +30,27 @@ An educational Python program that demonstrates the mathematical process of 1D c
 - ✅ True convolution (kernel flipping)
 - ✅ Detailed dot product calculations
 - ✅ Real-time 2D vector representation
+
+## ⚡ Quick Fix for Common Issues
+
+### UV Deprecation Warning Fix:
+```powershell
+# If you see UV deprecation warnings, update your project:
+git pull origin main
+# Then recreate your virtual environment:
+Remove-Item -Recurse -Force .venv
+uv venv
+.venv\Scripts\Activate.ps1
+uv pip install -r requirements.txt
+```
+
+### Python Version Issues:
+```powershell
+# Check and install correct Python version:
+uv python list
+uv python install 3.11
+uv venv --python 3.11
+```
 
 ## 🚀 Quick Start
 
@@ -144,12 +167,14 @@ Output Length = Input Length + Kernel Length - 1
 ## 📁 Project Structure
 
 ```
-L8-CorollationVsConvulation/
-├── enhanced_convolution_visualization.py  # Main program
-├── requirements.txt                       # Dependencies for pip
-├── pyproject.toml                        # UV project configuration
-├── README.md                             # This file
-└── .gitignore                           # Git ignore rules
+L8-CorollationVsConvolution/
+├── enhanced_convolution_visualization.py  # Main visualization program
+├── requirements.txt                       # Dependencies (with Python version info)
+├── pyproject.toml                        # UV project configuration & Python version
+├── runtime.txt                           # Python version for deployment platforms
+├── README.md                             # Complete documentation (this file)
+├── LICENSE                               # MIT License
+└── .gitignore                           # Git ignore rules for Python projects
 ```
 
 ## 🛠️ Troubleshooting
@@ -227,9 +252,22 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Your Name** - [rmisegal@gmail.com](mailto:rmisegal@gmail.com)
 
+## 📋 Changelog
+
+### Version 1.0.0 (Latest)
+- ✅ Fixed UV deprecation warnings (`tool.uv.dev-dependencies` → `dependency-groups.dev`)
+- ✅ Added UV Python version configuration (`tool.uv.python = ">=3.8"`)
+- ✅ Enhanced Python version documentation in requirements.txt
+- ✅ Added runtime.txt for deployment platforms
+- ✅ Comprehensive troubleshooting guide for UV and Python versions
+- ✅ Interactive 2D vector visualization showing H[0:2] × X_slice[0:2]
+- ✅ Step-by-step convolution animation with mathematical details
+- ✅ Full convolution with zero-padding implementation
+
 ## 🙏 Acknowledgments
 
 - Built with Python, NumPy, and Matplotlib
+- UV package manager for modern Python dependency management
 - Inspired by signal processing and machine learning education needs
 - Designed for interactive learning and visualization
 
