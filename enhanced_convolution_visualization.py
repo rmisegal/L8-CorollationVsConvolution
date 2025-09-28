@@ -38,25 +38,33 @@ class EnhancedConvolutionVisualizer:
         """Setup the matplotlib figure with all subplots and controls."""
         self.fig = plt.figure(figsize=(20, 14))
         
-        # Create grid layout with better proportions
-        gs = self.fig.add_gridspec(4, 3, height_ratios=[1.2, 1.2, 1.2, 0.3], 
-                                  width_ratios=[1, 1, 1])
+        # Create grid layout with better proportions - now 5 rows
+        gs = self.fig.add_gridspec(5, 4, height_ratios=[1.0, 0.8, 1.2, 1.0, 0.3], 
+                                  width_ratios=[1, 1, 1, 1])
         
         # Vector displays (top row)
         self.ax_x = self.fig.add_subplot(gs[0, 0])
         self.ax_h = self.fig.add_subplot(gs[0, 1])
         self.ax_y = self.fig.add_subplot(gs[0, 2])
         
-        # 2D vector visualization (second row, spans all columns)
-        self.ax_2d = self.fig.add_subplot(gs[1, :])
+        # New sliding window visualization (second row, spans 3 columns)
+        self.ax_sliding = self.fig.add_subplot(gs[1, :3])
         
-        # Computation details (third row, spans all columns)
-        self.ax_computation = self.fig.add_subplot(gs[2, :])
+        # Y Vector progress (top right, spans 2 rows)
+        self.ax_y_progress = self.fig.add_subplot(gs[0:2, 3])
+        
+        # 2D vector visualization (third row, spans all columns)
+        self.ax_2d = self.fig.add_subplot(gs[2, :])
+        
+        # Computation details (fourth row, spans all columns)
+        self.ax_computation = self.fig.add_subplot(gs[3, :])
         
         # Control buttons (bottom row)
-        self.ax_buttons = self.fig.add_subplot(gs[3, :])
+        self.ax_buttons = self.fig.add_subplot(gs[4, :])
         
         self.setup_vector_plots()
+        self.setup_sliding_window()
+        self.setup_y_progress()
         self.setup_2d_plot()
         self.setup_computation_display()
         self.setup_buttons()
@@ -89,6 +97,29 @@ class EnhancedConvolutionVisualizer:
         self.ax_y.grid(True, alpha=0.3)
         self.ax_y.set_xlabel('Index', fontsize=12)
         self.ax_y.set_ylabel('Value', fontsize=12)
+        
+    def setup_sliding_window(self):
+        """Setup the sliding window visualization showing H moving over X."""
+        self.ax_sliding.set_title('Kernel H Sliding Over Padded Input X', 
+                                fontsize=12, fontweight='bold', pad=15)
+        # Calculate total padded length
+        total_length = self.x_size + 2 * (self.kernel_size - 1)
+        self.ax_sliding.set_xlim(-0.5, total_length - 0.5)
+        self.ax_sliding.set_ylim(-0.5, 2.5)
+        self.ax_sliding.grid(True, alpha=0.3)
+        self.ax_sliding.set_xlabel('Position', fontsize=10)
+        self.ax_sliding.set_ylabel('Layer', fontsize=10)
+        
+        # Add labels for layers
+        self.ax_sliding.text(-1, 0, 'X (padded)', fontsize=10, ha='right', va='center', fontweight='bold')
+        self.ax_sliding.text(-1, 1, 'H (kernel)', fontsize=10, ha='right', va='center', fontweight='bold')
+        
+    def setup_y_progress(self):
+        """Setup the Y vector progress display."""
+        self.ax_y_progress.set_title('Y Vector\nProgress', fontsize=12, fontweight='bold', pad=15)
+        self.ax_y_progress.set_xlim(0, 1)
+        self.ax_y_progress.set_ylim(0, 1)
+        self.ax_y_progress.axis('off')
         
     def setup_2d_plot(self):
         """Setup the 2D vector visualization plot."""
@@ -187,11 +218,15 @@ class EnhancedConvolutionVisualizer:
         self.ax_x.clear()
         self.ax_h.clear()
         self.ax_y.clear()
+        self.ax_sliding.clear()
+        self.ax_y_progress.clear()
         self.ax_2d.clear()
         self.ax_computation.clear()
         
         # Reapply settings
         self.setup_vector_plots()
+        self.setup_sliding_window()
+        self.setup_y_progress()
         self.setup_2d_plot()
         self.setup_computation_display()
         
@@ -233,6 +268,12 @@ class EnhancedConvolutionVisualizer:
             if i <= self.current_step and val != 0:
                 self.ax_y.text(i, val + 0.2 if val >= 0 else val - 0.4, f'{val:.2f}', 
                               ha='center', va='bottom' if val >= 0 else 'top', fontsize=10, fontweight='bold')
+        
+        # Plot sliding window visualization
+        self.plot_sliding_window()
+        
+        # Plot Y vector progress
+        self.plot_y_progress()
         
         # Plot 2D vector representation
         if len(self.H_original) >= 2:
@@ -296,37 +337,79 @@ class EnhancedConvolutionVisualizer:
                               ha='center', va='center',
                               bbox=dict(boxstyle="round,pad=0.5", facecolor="lightgreen", alpha=0.9))
         
-        # Display computation details with better spacing
+    def plot_sliding_window(self):
+        """Plot the sliding window showing H moving over padded X."""
+        X_padded = self.get_padded_x()
+        total_length = len(X_padded)
+        
+        # Plot padded X vector at y=0
+        for i, val in enumerate(X_padded):
+            color = 'lightblue' if i < self.kernel_size-1 or i >= total_length-(self.kernel_size-1) else 'blue'
+            self.ax_sliding.bar(i, 0.8, bottom=0, alpha=0.7, color=color, edgecolor='black', linewidth=1)
+            if val != 0:  # Only show non-zero values
+                self.ax_sliding.text(i, 0.4, f'{val:.1f}', ha='center', va='center', fontsize=8, fontweight='bold')
+            else:
+                self.ax_sliding.text(i, 0.4, '0', ha='center', va='center', fontsize=8, color='gray')
+        
+        # Plot kernel H at y=1, positioned according to current step
+        if self.current_step < self.max_steps:
+            kernel_start = self.current_step
+            for i, val in enumerate(self.H_original):
+                pos = kernel_start + i
+                if pos < total_length:
+                    self.ax_sliding.bar(pos, 0.8, bottom=1, alpha=0.8, color='red', edgecolor='black', linewidth=1)
+                    self.ax_sliding.text(pos, 1.4, f'{val:.1f}', ha='center', va='center', fontsize=8, fontweight='bold', color='white')
+            
+            # Add arrow showing current computation position
+            arrow_pos = kernel_start + self.kernel_size // 2
+            self.ax_sliding.annotate(f'Step {self.current_step + 1}', 
+                                   xy=(arrow_pos, 2), xytext=(arrow_pos, 2.3),
+                                   ha='center', va='bottom', fontsize=10, fontweight='bold',
+                                   arrowprops=dict(arrowstyle='->', color='orange', lw=2))
+    
+    def plot_y_progress(self):
+        """Plot the Y vector progress display."""
+        y_text = "Y Vector Progress:\n\n"
+        
+        # Show completed values
+        for i in range(min(self.current_step, len(self.Y))):
+            y_text += f"Y[{i:2d}] = {self.Y[i]:6.3f} [DONE]\n"
+        
+        # Show current calculation
+        if self.current_step < len(self.Y):
+            y_text += f"Y[{self.current_step:2d}] = calculating... [NOW]\n"
+        
+        # Show pending values (limited to avoid clutter)
+        pending_count = min(5, len(self.Y) - self.current_step - 1)
+        for i in range(self.current_step + 1, self.current_step + 1 + pending_count):
+            if i < len(self.Y):
+                y_text += f"Y[{i:2d}] = pending [WAIT]\n"
+        
+        if len(self.Y) - self.current_step - 1 > 5:
+            y_text += f"... and {len(self.Y) - self.current_step - 6} more\n"
+        
+        self.ax_y_progress.text(0.05, 0.95, y_text, transform=self.ax_y_progress.transAxes,
+                              fontsize=9, verticalalignment='top', fontfamily='monospace',
+                              bbox=dict(boxstyle="round,pad=0.4", facecolor="lightyellow", alpha=0.8))
+        
+        # Display computation details with better spacing (moved down to avoid covering 2D plot)
         if self.current_computation:
-            self.ax_computation.text(0.02, 0.85, "Current Calculation:", fontsize=13, fontweight='bold')
-            self.ax_computation.text(0.02, 0.55, self.current_computation, fontsize=11, 
+            self.ax_computation.text(0.02, 0.75, "Current Calculation:", fontsize=12, fontweight='bold')
+            self.ax_computation.text(0.02, 0.45, self.current_computation, fontsize=10, 
                                    fontfamily='monospace',
                                    bbox=dict(boxstyle="round,pad=0.4", facecolor="lightgreen", alpha=0.8))
             
             # Show kernel values
             kernel_text = f"Original Kernel H: [{', '.join([f'{h:.2f}' for h in self.H_original])}]"
-            self.ax_computation.text(0.02, 0.25, kernel_text, fontsize=10,
+            self.ax_computation.text(0.02, 0.15, kernel_text, fontsize=9,
                                    bbox=dict(boxstyle="round,pad=0.3", facecolor="lightblue", alpha=0.7))
-            
-            # Show Y vector progress on the right side
-            y_progress_text = "Y Vector Progress:\n"
-            for i in range(min(self.current_step + 1, len(self.Y))):
-                y_progress_text += f"Y[{i}] = {self.Y[i]:.3f}\n"
-            if self.current_step < len(self.Y) - 1:
-                y_progress_text += f"Y[{self.current_step + 1}] = calculating...\n"
-                for i in range(self.current_step + 2, len(self.Y)):
-                    y_progress_text += f"Y[{i}] = pending\n"
-            
-            self.ax_computation.text(0.55, 0.85, y_progress_text, fontsize=10, 
-                                   verticalalignment='top',
-                                   bbox=dict(boxstyle="round,pad=0.4", facecolor="lightyellow", alpha=0.8))
         
         # Update main title with better positioning
         self.fig.suptitle(f'1D Convolution Visualization - Step {self.current_step + 1} of {self.max_steps}', 
                          fontsize=16, fontweight='bold', y=0.98)
         
-        # Adjust layout with more space for title
-        plt.subplots_adjust(top=0.90, bottom=0.12, left=0.06, right=0.96, hspace=0.6, wspace=0.25)
+        # Adjust layout with more space for title and new components
+        plt.subplots_adjust(top=0.92, bottom=0.08, left=0.05, right=0.98, hspace=0.4, wspace=0.15)
         self.fig.canvas.draw()
         
     def next_step(self, event=None):
