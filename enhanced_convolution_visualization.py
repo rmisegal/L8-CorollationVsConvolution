@@ -36,10 +36,10 @@ class EnhancedConvolutionVisualizer:
         
     def setup_figure(self):
         """Setup the matplotlib figure with all subplots and controls."""
-        self.fig = plt.figure(figsize=(18, 12))
+        self.fig = plt.figure(figsize=(20, 14))
         
         # Create grid layout with better proportions
-        gs = self.fig.add_gridspec(4, 3, height_ratios=[1.2, 1.2, 1, 0.3], 
+        gs = self.fig.add_gridspec(4, 3, height_ratios=[1.2, 1.2, 1.2, 0.3], 
                                   width_ratios=[1, 1, 1])
         
         # Vector displays (top row)
@@ -284,11 +284,11 @@ class EnhancedConvolutionVisualizer:
                               fontsize=11, verticalalignment='top',
                               bbox=dict(boxstyle="round,pad=0.5", facecolor="lightyellow", alpha=0.8))
                 
-                # Add scalar result as text in center
-                self.ax_2d.text(0.5, 0.5, f'Scalar Result:\n{current_result:.3f}', 
-                              transform=self.ax_2d.transAxes, fontsize=16, fontweight='bold',
-                              ha='center', va='center',
-                              bbox=dict(boxstyle="round,pad=0.5", facecolor="lightcoral", alpha=0.9))
+                # Add scalar result at top right to avoid covering vectors
+                self.ax_2d.text(0.98, 0.95, f'Scalar Result: {current_result:.3f}', 
+                              transform=self.ax_2d.transAxes, fontsize=14, fontweight='bold',
+                              ha='right', va='top',
+                              bbox=dict(boxstyle="round,pad=0.4", facecolor="lightcoral", alpha=0.9))
             else:
                 # Show final state or initial state
                 self.ax_2d.text(0.5, 0.5, 'Convolution\nComplete!' if self.current_step >= self.max_steps else 'Ready to Start', 
@@ -296,24 +296,37 @@ class EnhancedConvolutionVisualizer:
                               ha='center', va='center',
                               bbox=dict(boxstyle="round,pad=0.5", facecolor="lightgreen", alpha=0.9))
         
-        # Display computation details
+        # Display computation details with better spacing
         if self.current_computation:
-            self.ax_computation.text(0.05, 0.7, "Current Calculation:", fontsize=14, fontweight='bold')
-            self.ax_computation.text(0.05, 0.4, self.current_computation, fontsize=12, 
+            self.ax_computation.text(0.02, 0.85, "Current Calculation:", fontsize=13, fontweight='bold')
+            self.ax_computation.text(0.02, 0.55, self.current_computation, fontsize=11, 
                                    fontfamily='monospace',
-                                   bbox=dict(boxstyle="round,pad=0.5", facecolor="lightgreen", alpha=0.7))
+                                   bbox=dict(boxstyle="round,pad=0.4", facecolor="lightgreen", alpha=0.8))
             
             # Show kernel values
             kernel_text = f"Original Kernel H: [{', '.join([f'{h:.2f}' for h in self.H_original])}]"
-            self.ax_computation.text(0.05, 0.1, kernel_text, fontsize=11,
+            self.ax_computation.text(0.02, 0.25, kernel_text, fontsize=10,
                                    bbox=dict(boxstyle="round,pad=0.3", facecolor="lightblue", alpha=0.7))
+            
+            # Show Y vector progress on the right side
+            y_progress_text = "Y Vector Progress:\n"
+            for i in range(min(self.current_step + 1, len(self.Y))):
+                y_progress_text += f"Y[{i}] = {self.Y[i]:.3f}\n"
+            if self.current_step < len(self.Y) - 1:
+                y_progress_text += f"Y[{self.current_step + 1}] = calculating...\n"
+                for i in range(self.current_step + 2, len(self.Y)):
+                    y_progress_text += f"Y[{i}] = pending\n"
+            
+            self.ax_computation.text(0.55, 0.85, y_progress_text, fontsize=10, 
+                                   verticalalignment='top',
+                                   bbox=dict(boxstyle="round,pad=0.4", facecolor="lightyellow", alpha=0.8))
         
-        # Update main title
+        # Update main title with better positioning
         self.fig.suptitle(f'1D Convolution Visualization - Step {self.current_step + 1} of {self.max_steps}', 
-                         fontsize=18, fontweight='bold')
+                         fontsize=16, fontweight='bold', y=0.98)
         
-        # Adjust layout
-        plt.subplots_adjust(top=0.93, bottom=0.12, left=0.06, right=0.96, hspace=0.5, wspace=0.25)
+        # Adjust layout with more space for title
+        plt.subplots_adjust(top=0.90, bottom=0.12, left=0.06, right=0.96, hspace=0.6, wspace=0.25)
         self.fig.canvas.draw()
         
     def next_step(self, event=None):
