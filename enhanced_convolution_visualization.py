@@ -1,7 +1,160 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.widgets import Button
+from matplotlib.widgets import Button, Slider
 import matplotlib.patches as patches
+
+class CorrelationVisualizer:
+    """
+    Interactive 2D correlation visualization showing how correlation coefficient
+    affects scatter plot patterns.
+    """
+    
+    def __init__(self):
+        self.correlation = 0.0
+        self.n_points = 200
+        self.setup_figure()
+        
+    def setup_figure(self):
+        """Setup the correlation visualization figure."""
+        self.fig, (self.ax_scatter, self.ax_info) = plt.subplots(1, 2, figsize=(14, 6))
+        
+        # Setup scatter plot
+        self.ax_scatter.set_title('2D Correlation Visualization', fontsize=14, fontweight='bold')
+        self.ax_scatter.set_xlim(-4, 4)
+        self.ax_scatter.set_ylim(-4, 4)
+        self.ax_scatter.grid(True, alpha=0.3)
+        self.ax_scatter.set_xlabel('X Variable', fontsize=12)
+        self.ax_scatter.set_ylabel('Y Variable', fontsize=12)
+        self.ax_scatter.axhline(y=0, color='k', linestyle='-', alpha=0.3)
+        self.ax_scatter.axvline(x=0, color='k', linestyle='-', alpha=0.3)
+        
+        # Setup info panel
+        self.ax_info.set_title('Correlation Information', fontsize=14, fontweight='bold')
+        self.ax_info.set_xlim(0, 1)
+        self.ax_info.set_ylim(0, 1)
+        self.ax_info.axis('off')
+        
+        # Add slider
+        slider_ax = plt.axes([0.2, 0.02, 0.5, 0.03])
+        self.slider = Slider(slider_ax, 'Correlation', -1.0, 1.0, valinit=0.0, valfmt='%.2f')
+        self.slider.on_changed(self.update_correlation)
+        
+        # Initial plot
+        self.update_plot()
+        
+    def generate_correlated_data(self, correlation):
+        """Generate 2D data with specified correlation."""
+        # Generate independent random variables
+        x1 = np.random.randn(self.n_points)
+        x2 = np.random.randn(self.n_points)
+        
+        # Create correlated variables using Cholesky decomposition
+        # Correlation matrix
+        corr_matrix = np.array([[1.0, correlation], [correlation, 1.0]])
+        
+        # Cholesky decomposition
+        L = np.linalg.cholesky(corr_matrix)
+        
+        # Generate correlated data
+        uncorrelated = np.vstack([x1, x2])
+        correlated = L @ uncorrelated
+        
+        return correlated[0], correlated[1]
+        
+    def update_correlation(self, val):
+        """Update correlation value and refresh plot."""
+        self.correlation = self.slider.val
+        self.update_plot()
+        
+    def update_plot(self):
+        """Update the scatter plot and information panel."""
+        # Clear previous plot
+        self.ax_scatter.clear()
+        self.ax_info.clear()
+        
+        # Reapply scatter plot settings
+        self.ax_scatter.set_title('2D Correlation Visualization', fontsize=14, fontweight='bold')
+        self.ax_scatter.set_xlim(-4, 4)
+        self.ax_scatter.set_ylim(-4, 4)
+        self.ax_scatter.grid(True, alpha=0.3)
+        self.ax_scatter.set_xlabel('X Variable', fontsize=12)
+        self.ax_scatter.set_ylabel('Y Variable', fontsize=12)
+        self.ax_scatter.axhline(y=0, color='k', linestyle='-', alpha=0.3)
+        self.ax_scatter.axvline(x=0, color='k', linestyle='-', alpha=0.3)
+        
+        # Generate and plot correlated data
+        x_data, y_data = self.generate_correlated_data(self.correlation)
+        
+        # Color points based on correlation strength
+        if abs(self.correlation) < 0.3:
+            color = 'blue'
+            alpha = 0.6
+        elif abs(self.correlation) < 0.7:
+            color = 'orange'
+            alpha = 0.7
+        else:
+            color = 'red'
+            alpha = 0.8
+            
+        self.ax_scatter.scatter(x_data, y_data, c=color, alpha=alpha, s=30, edgecolors='black', linewidth=0.5)
+        
+        # Add correlation value text
+        self.ax_scatter.text(0.02, 0.98, f'r = {self.correlation:.3f}', 
+                           transform=self.ax_scatter.transAxes, fontsize=16, fontweight='bold',
+                           bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.8))
+        
+        # Update info panel
+        self.ax_info.set_title('Correlation Information', fontsize=14, fontweight='bold')
+        self.ax_info.set_xlim(0, 1)
+        self.ax_info.set_ylim(0, 1)
+        self.ax_info.axis('off')
+        
+        # Correlation interpretation
+        if abs(self.correlation) < 0.1:
+            interpretation = "No linear relationship"
+            pattern = "Random circular scatter"
+        elif abs(self.correlation) < 0.3:
+            interpretation = "Weak linear relationship"
+            pattern = "Slight elliptical pattern"
+        elif abs(self.correlation) < 0.7:
+            interpretation = "Moderate linear relationship"
+            pattern = "Clear elliptical pattern"
+        elif abs(self.correlation) < 0.9:
+            interpretation = "Strong linear relationship"
+            pattern = "Narrow elliptical pattern"
+        else:
+            interpretation = "Very strong linear relationship"
+            pattern = "Nearly perfect line"
+            
+        direction = "Positive (↗)" if self.correlation > 0 else "Negative (↙)" if self.correlation < 0 else "None"
+        
+        info_text = f"""Correlation Coefficient: {self.correlation:.3f}
+
+Strength: {interpretation}
+Direction: {direction}
+Pattern: {pattern}
+
+Key Points:
+• r = +1: Perfect positive correlation (45° line)
+• r = 0: No linear correlation (circle)
+• r = -1: Perfect negative correlation (-45° line)
+
+Current Data:
+• {self.n_points} random points
+• Mean X: {np.mean(x_data):.2f}
+• Mean Y: {np.mean(y_data):.2f}
+• Actual r: {np.corrcoef(x_data, y_data)[0,1]:.3f}"""
+        
+        self.ax_info.text(0.05, 0.95, info_text, transform=self.ax_info.transAxes,
+                         fontsize=10, verticalalignment='top', fontfamily='monospace',
+                         bbox=dict(boxstyle="round,pad=0.5", facecolor="lightyellow", alpha=0.8))
+        
+        # Refresh display
+        self.fig.canvas.draw()
+        
+    def show(self):
+        """Display the correlation visualization."""
+        plt.show()
 
 class EnhancedConvolutionVisualizer:
     """
@@ -163,9 +316,14 @@ class EnhancedConvolutionVisualizer:
         self.btn_auto.on_clicked(self.auto_play)
         
         # New random button
-        ax_random = plt.axes([0.6, 0.02, 0.15, 0.04])
+        ax_random = plt.axes([0.6, 0.02, 0.12, 0.04])
         self.btn_random = Button(ax_random, 'New Random')
         self.btn_random.on_clicked(self.new_random)
+        
+        # Correlation visualizer button
+        ax_correlation = plt.axes([0.75, 0.02, 0.15, 0.04])
+        self.btn_correlation = Button(ax_correlation, 'Correlation Demo')
+        self.btn_correlation.on_clicked(self.show_correlation)
         
     def get_padded_x(self):
         """Get X vector padded with zeros for full convolution."""
@@ -444,6 +602,18 @@ class EnhancedConvolutionVisualizer:
         while self.current_step < self.max_steps:
             self.next_step()
             plt.pause(1.5)  # Wait 1.5 seconds between steps
+    
+    def show_correlation(self, event=None):
+        """Launch the correlation visualization window."""
+        import subprocess
+        import sys
+        try:
+            # Launch correlation demo as separate process
+            subprocess.Popen([sys.executable, 'correlation_demo.py'])
+            print("Launching Correlation Demo in separate window...")
+        except Exception as e:
+            print(f"Could not launch correlation demo: {e}")
+            print("Please run 'python correlation_demo.py' manually.")
             
     def show(self):
         """Display the visualization."""
@@ -451,25 +621,32 @@ class EnhancedConvolutionVisualizer:
 
 def main():
     """Main function to run the enhanced convolution visualizer."""
-    print("=" * 60)
-    print("Enhanced 1D Convolution Visualization")
-    print("=" * 60)
+    print("=" * 70)
+    print("Enhanced 1D Convolution & Correlation Visualization")
+    print("=" * 70)
     print("\nThis program demonstrates 1D convolution step by step:")
     print("• Vector X: Input signal (length 10)")
     print("• Kernel H: Convolution kernel (length 5)")
     print("• Output Y: Full convolution result (length 14)")
     print("• 2D Plot: Vector representation using H[0] and H[1]")
-    print("\nControls:")
+    print("• Sliding Window: Shows kernel moving over padded input")
+    print("\nMain Controls:")
     print("• Next Step: Advance one convolution step")
     print("• Reset: Restart with same vectors")
     print("• Auto Play: Run through all steps automatically")
     print("• New Random: Generate new random vectors")
+    print("• Correlation Demo: Open 2D correlation visualization")
+    print("\nCorrelation Demo Features:")
+    print("• Interactive slider from -1 to +1 correlation")
+    print("• Real-time scatter plot updates")
+    print("• Shows circular (r=0) to linear (r=±1) patterns")
+    print("• Educational information panel")
     print("\nMathematical Details:")
     print("• Full convolution: output_size = input_size + kernel_size - 1")
     print("• Zero padding is applied to input for boundary handling")
     print("• Kernel is flipped for true convolution (not correlation)")
     print("• Each step shows the detailed dot product calculation")
-    print("=" * 60)
+    print("=" * 70)
     
     visualizer = EnhancedConvolutionVisualizer()
     visualizer.show()
